@@ -231,7 +231,7 @@ tk.Label(
     image=img
 ).grid(column=0, row=1, padx=250, pady=10)	
 
-window.attributes('-fullscreen', True)
+# window.attributes('-fullscreen', True)
 
 
 window.geometry('1000x400')

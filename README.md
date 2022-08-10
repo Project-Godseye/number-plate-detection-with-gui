@@ -1,5 +1,7 @@
 # Number Plate Detection with Gui
 
+![alt text](screenshot.png)
+
 To run project :
  + `pipenv install`
  
