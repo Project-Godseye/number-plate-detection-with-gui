@@ -4,10 +4,18 @@ import os
 import glob
 import numpy as np
 import cv2
-from PIL import Image
+from PIL import Image,ImageTk
 import pytesseract
 import re
+# for selecting random locations
+import random
+import tkinter as tk
+import tkinter.font as fnt
+import tkintermapview
 
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+window = tk.Tk()   
 #Detecting numberplate
 def number_plate_detection(img):
     def clean2_plate(plate):
@@ -137,51 +145,96 @@ def binarySearch (arr, l, r, x):
     
 
 print("HELLO!!")
-print("Welcome to the Number Plate Detection System.\n")
+print("GODSEYE - Welcome to the Number Plate Detection System.\n")
 
 array=[]
 
 dir = os.path.dirname(__file__)
 
-for img in glob.glob(dir+"/Images/*.jpeg") :
-    img=cv2.imread(img)
-    
-    img2 = cv2.resize(img, (600, 600))
-    cv2.imshow("Image of car ",img2)
-    cv2.waitKey(1000)
-    cv2.destroyAllWindows()
-    
-    
-    number_plate=number_plate_detection(img)
-    res2 = str("".join(re.split("[^a-zA-Z0-9]*", number_plate)))
-    res2=res2.upper()
-    print(res2)
+def detect():
+    msg = ""
+    for img in glob.glob(dir+"/Dataset/*.jpeg") :
+        img=cv2.imread(img)
+        
+        img2 = cv2.resize(img, (600, 600))
+        cv2.imshow("Image of car ",img2)
+        cv2.waitKey(1000)
+        cv2.destroyAllWindows()
+        
+        
+        number_plate=number_plate_detection(img)
+        if number_plate != "":
+            res2 = str("".join(re.split("[^a-zA-Z0-9]*", number_plate)))
+            res2.upper()
+            # res2=res2.upper()
+            array_location = ['Mangalore','Surathkal','Mulki','Nitte']
+            location = random.choice(array_location)
+            dict = { 'no': res2, 'location': location}
+            array.append(dict)
+            # add to label
+            msg = msg + "\n" + res2 + " is in location " + location
 
-    array.append(res2)
+    #Sorting
+    # array=quickSort(array,0,len(array)-1)
+    print ("\n\n")
+    print("Vehicles found in cctv database:-")
+    for i in array:
+        print(i)
+    print ("\n\n")    
 
-#Sorting
-array=quickSort(array,0,len(array)-1)
-print ("\n\n")
-print("The Vehicle numbers registered are:-")
-for i in array:
-    print(i)
-print ("\n\n")    
+    #Searching
 
-#Searching
-for img in glob.glob(dir+"/search/*.jpeg") :
-    img=cv2.imread(img)
-    
-    number_plate=number_plate_detection(img)
-    res2 = str("".join(re.split("[^a-zA-Z0-9]*", number_plate)))
+    for img in glob.glob(dir+"/Search_Image/*.jpeg") :
+        img=cv2.imread(img)
+        
+        number_plate=number_plate_detection(img)
+        if number_plate != "":
+            res2 = str("".join(re.split("[^a-zA-Z0-9]*", number_plate)))
 
-print("The car number to search is:- ",res2)
-    
-
-result = binarySearch(array,0,len(array)-1,res2)
-if result != -1: 
-	print ("\n\nThe Vehicle is allowed to visit." ) 
-else: 
-    print ("\n\nThe Vehicle is  not allowed to visit.")
+    print("The car number to search is:- ",res2)
         
 
-    			
+    for x in array:
+        if x['no'] == res2:
+            result = x
+            break
+
+    # result = binarySearch(array,0,len(array)-1,res2)
+    print(array)
+    msg = msg + "\n\n" + "Please wait we are searching our database..."
+    if result: 
+        msg = msg + "\n\n" + result['no'] +" Vehicle Found in location " +  result['location']
+        # map
+        # create tkinter window
+
+                # create map widget
+        map_widget = tkintermapview.TkinterMapView(window, width=700, height=700, corner_radius=0)
+        map_widget.place(relx=0.7, rely=0.5, anchor=tk.CENTER)
+        map_widget.set_address(result['location'],marker=True)
+    else: 
+        msg = msg  + "\n\n" +"Vehicle Not Detected"
+    lbl = tk.Label(window, text=msg, bg="white", font=("Arial", 18))
+    lbl.grid(column=0, row=2)    
+
+
+     
+window.title("Godseye")
+#start button
+btn = tk.Button(window, text="Start Detection",bg="#051d40",activebackground="white",	
+height="2", width="20",	fg="white", command = detect,font = fnt.Font(size = 15))
+btn.grid(column=0, row=4, padx=250, pady=10)
+#display logo
+img1 = Image.open("logo.png")
+img = ImageTk.PhotoImage(img1)
+tk.Label(
+    window,
+    image=img
+).grid(column=0, row=1, padx=250, pady=10)	
+
+window.attributes('-fullscreen', True)
+
+
+window.geometry('1000x400')
+window.configure(background='#fafafa')
+
+window.mainloop()   
